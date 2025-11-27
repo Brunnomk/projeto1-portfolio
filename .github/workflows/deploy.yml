@@ -1,27 +1,28 @@
-
-name: Deploy para HostGator
+name: Deploy para HostGator ([deploy] na mensagem)
 
 on:
   push:
-    branches: [ main ]  # troque para master se for seu branch principal
+    branches: [ main ]   # troque se seu branch principal for 'master' ou outro
 
 jobs:
   deploy:
+    # Só executa se a mensagem do commit mais recente tiver [deploy]
+    if: contains(github.event.head_commit.message, '[deploy]')
     runs-on: ubuntu-latest
 
     steps:
-      - name: Baixar código
+      - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Configurar SSH
+      - name: Configurar SSH (ssh-agent)
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Adicionar Host ao known_hosts
+      - name: Adicionar host ao known_hosts
         run: ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
 
-      - name: Enviar arquivos para public_html
+      - name: Deploy para public_html (rsync)
         run: |
           rsync -avz --delete \
             --exclude='.git' \
